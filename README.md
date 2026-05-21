@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SHE Web — Paystack Transparency Portal
 
-## Getting Started
+A single-page public dashboard for **Sangotedo Housing Estate** that displays Paystack transactions grouped by dedicated virtual account (DVA). Visitors can select an account and browse its payment history without signing in.
 
-First, run the development server:
+## How it works
+
+Paystack does not expose a “transactions for DVA X” endpoint. This app:
+
+1. Lists all **dedicated virtual accounts** on your integration (`GET /dedicated_account`)
+2. Lists **successful transactions** (`GET /transaction?status=success`)
+3. Assigns each transaction to a DVA using:
+   - `authorization.receiver_bank_account_number` (primary), or
+   - Customer ID for `dedicated_nuban` / `bank_transfer` channels
+4. Puts unmatched transactions under **Other transactions** (card, USSD, etc.)
+5. Loads **Paystack balance** (`GET /balance`) and **outgoing transfers** (`GET /transfer`)
+
+The Paystack **secret key** is used only in Next.js Route Handlers (`/api/transparency`), so it never ships to the browser.
+
+Visitors switch between **Incoming payments** (by DVA) and **Outgoing transfers** using tabs below the stats bar.
+
+## Setup
 
 ```bash
+cd she-web
+cp .env.example .env.local
+# Edit .env.local and set PAYSTACK_SECRET_KEY
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `PAYSTACK_SECRET_KEY` | Yes | Paystack secret key (`sk_live_…` or `sk_test_…`) |
+| `PAYSTACK_MAX_TRANSACTION_PAGES` | No | Max transaction API pages (default `20` × 100 rows) |
+| `PAYSTACK_MAX_TRANSFER_PAGES` | No | Max transfer API pages (default `20` × 100 rows) |
+| `NEXT_PUBLIC_SITE_NAME` | No | Header title (default: Sangotedo Housing Estate) |
 
-## Learn More
+## Deploy
 
-To learn more about Next.js, take a look at the following resources:
+Works on Vercel, Netlify, or any Node host that supports Next.js:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Set the same environment variables in the host dashboard
+2. `npm run build && npm start`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Security note
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This portal is meant for **transparency**, not for hiding data. Anyone with the URL can see transaction summaries. Do not commit `.env.local` or share your secret key publicly.
