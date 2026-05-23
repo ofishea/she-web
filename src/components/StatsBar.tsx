@@ -13,7 +13,7 @@ export function StatsBar({ data }: StatsBarProps) {
     ...(primaryBalance
       ? [
           {
-            label: "Paystack balance",
+            label: "Account balance",
             value: formatCurrency(
               primaryBalance.balanceKobo,
               primaryBalance.currency,
@@ -23,6 +23,11 @@ export function StatsBar({ data }: StatsBarProps) {
         ]
       : []),
     {
+      label: "Next payout",
+      value: formatCurrency(data.totals.nextPayoutKobo),
+      highlight: false,
+    },
+    {
       label: "Incoming payments",
       value: String(data.totals.transactions),
       highlight: false,
@@ -30,11 +35,6 @@ export function StatsBar({ data }: StatsBarProps) {
     {
       label: "Total received",
       value: formatCurrency(data.totals.totalVolumeKobo),
-      highlight: false,
-    },
-    {
-      label: "Next payout",
-      value: formatCurrency(data.totals.nextPayoutKobo),
       highlight: false,
     },
     {
