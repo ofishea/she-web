@@ -32,6 +32,34 @@ export function sumTransactionFees(
   return transactions.reduce((sum, t) => sum + (t.fees ?? 0), 0);
 }
 
+const LAGOS_TIMEZONE = "Africa/Lagos";
+
+function calendarDayInLagos(iso: string): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: LAGOS_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(iso));
+}
+
+export function isTransactionToday(
+  tx: { paidAt: string | null; createdAt: string },
+  now = new Date(),
+): boolean {
+  const txDay = calendarDayInLagos(tx.paidAt ?? tx.createdAt);
+  const today = calendarDayInLagos(now.toISOString());
+  return txDay === today;
+}
+
+export function sumTodayIncome(
+  transactions: { paidAt: string | null; createdAt: string; amount: number }[],
+): number {
+  return transactions
+    .filter((tx) => isTransactionToday(tx))
+    .reduce((sum, tx) => sum + tx.amount, 0);
+}
+
 export function maskAccountNumber(account: string | null): string {
   if (!account) return "—";
   if (account.length <= 4) return account;

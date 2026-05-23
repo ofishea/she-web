@@ -177,6 +177,7 @@ export interface TransparencyDashboard {
     accounts: number;
     transactions: number;
     totalVolumeKobo: number;
+    nextPayoutKobo: number;
     transfers: number;
     totalTransferredKobo: number;
   };

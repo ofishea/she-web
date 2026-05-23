@@ -1,3 +1,4 @@
+import { sumTodayIncome } from "@/lib/format";
 import { paystackFetch, paystackFetchAllPages } from "./client";
 import type {
   AccountWithTransactions,
@@ -232,6 +233,11 @@ export async function fetchTransparencyDashboard(): Promise<TransparencyDashboar
     );
 
   const allMatched = accounts.flatMap((a) => a.transactions);
+  const allIncomeTransactions = [
+    ...allMatched,
+    ...unassignedTransactions,
+  ];
+  const nextPayoutKobo = sumTodayIncome(allIncomeTransactions);
 
   const transparencyTransfers = transfers
     .map(toTransparencyTransfer)
@@ -257,6 +263,7 @@ export async function fetchTransparencyDashboard(): Promise<TransparencyDashboar
       totalVolumeKobo:
         allMatched.reduce((s, t) => s + t.amount, 0) +
         unassignedTransactions.reduce((s, t) => s + t.amount, 0),
+      nextPayoutKobo,
       transfers: transparencyTransfers.length,
       totalTransferredKobo: successfulTransfers.reduce(
         (s, t) => s + t.amount,

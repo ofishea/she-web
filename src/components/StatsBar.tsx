@@ -23,11 +23,6 @@ export function StatsBar({ data }: StatsBarProps) {
         ]
       : []),
     {
-      label: "Active accounts",
-      value: String(data.totals.accounts),
-      highlight: false,
-    },
-    {
       label: "Incoming payments",
       value: String(data.totals.transactions),
       highlight: false,
@@ -35,6 +30,11 @@ export function StatsBar({ data }: StatsBarProps) {
     {
       label: "Total received",
       value: formatCurrency(data.totals.totalVolumeKobo),
+      highlight: false,
+    },
+    {
+      label: "Next payout",
+      value: formatCurrency(data.totals.nextPayoutKobo),
       highlight: false,
     },
     {
@@ -50,7 +50,7 @@ export function StatsBar({ data }: StatsBarProps) {
   ];
 
   return (
-    <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6">
       {items.map((item) => (
         <div
           key={item.label}
