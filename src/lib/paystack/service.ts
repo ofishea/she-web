@@ -1,3 +1,4 @@
+import { EXCLUDED_TRANSFER_REFERENCES } from "@/lib/excluded-transfers";
 import { sumTodayIncome } from "@/lib/format";
 import { paystackFetch, paystackFetchAllPages } from "./client";
 import type {
@@ -160,10 +161,9 @@ export async function fetchTransparencyDashboard(): Promise<TransparencyDashboar
       })),
     ]);
 
-  const balances: TransparencyBalance[] = balanceResult.data.map((b) => ({
-    currency: b.currency,
-    balanceKobo: b.balance,
-  }));
+  const excludedReferences = new Set(
+    EXCLUDED_TRANSFER_REFERENCES.map((ref) => ref.trim()).filter(Boolean),
+  );
 
   const activeAccounts = dedicatedAccounts.filter(
     (a) => a.active && a.assigned && a.account_number,
@@ -239,8 +239,29 @@ export async function fetchTransparencyDashboard(): Promise<TransparencyDashboar
   ];
   const nextPayoutKobo = sumTodayIncome(allIncomeTransactions);
 
-  const transparencyTransfers = transfers
-    .map(toTransparencyTransfer)
+  const allTransfers = transfers.map(toTransparencyTransfer);
+
+  // Hidden transfers: removed from the table, but their amounts are added
+  // back to Account balance so stats reflect funds as if those payouts never left.
+  const excludedTransfers = allTransfers.filter((t) =>
+    excludedReferences.has(t.reference),
+  );
+  const excludedAmountByCurrency = new Map<string, number>();
+  for (const transfer of excludedTransfers) {
+    if (transfer.status !== "success") continue;
+    excludedAmountByCurrency.set(
+      transfer.currency,
+      (excludedAmountByCurrency.get(transfer.currency) ?? 0) + transfer.amount,
+    );
+  }
+
+  const balances: TransparencyBalance[] = balanceResult.data.map((b) => ({
+    currency: b.currency,
+    balanceKobo: b.balance + (excludedAmountByCurrency.get(b.currency) ?? 0),
+  }));
+
+  const transparencyTransfers = allTransfers
+    .filter((t) => !excludedReferences.has(t.reference))
     .sort(
       (a, b) =>
         new Date(b.transferredAt ?? b.createdAt).getTime() -
